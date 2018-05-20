@@ -1,0 +1,787 @@
+域名:video.gengeng.mobi
+
+公共结构定义：
+
+VIDEO_INFO:
+    {
+            video_id           @int,  '视频id',
+            ali_video_id       @str,  '对应的阿里云视频id'
+            user_id            @str,  '上传视频的用户id',
+            video_size         @str,  '视频大小',
+            video_file_name    @str,  '视频文件名，如123.mp4',
+            video_title        @str,  '视频标题',
+            video_cover_url    @str,  '视频大图',
+            video_play_url     @str,  '视频播放地址',
+            video_description  @str,  '对应阿里云的视频播放信息',
+            rank               @int,  '视频rank',
+            video_time         @str,  '视频时长',
+            channel            @str,  '视频渠道',
+            view_num           @int,  '视频播放次数'
+            comment_num        @int,   评论次数
+            collect_num        @int,   收藏次数
+            like_num           @int,   点赞次数
+            share_num          @int,   分享次数
+
+            name:              @str,   发布视频的用户姓名
+            head_img:          @str,   发布视频的用户头像
+            sex:               @int,   性别，0男，1女
+            address:           @str,   地址
+            is_self_like:      @int,   是否点赞， 1点赞，0未点赞
+            is_self_like:      @int,   是否点赞， 1点赞，0未点赞
+            is_self_collect:   @int,   是否收藏， 1收藏
+            is_follow:         @int,   是否关注视频发布者
+            channel_level2     @str,   二级频道
+            create_time:       @str,   视频上传日期
+            view_time:         @str,   视频观看日期
+
+            # 2.0版本新增
+            view_role:         @str,   视频观看权限： public:公开，friend: 好友可见, self: 仅自己
+            plant_type：       @str,   作物类别
+            grow_peroid：      @str,   生长阶段
+            sickness：         @str,   病虫草害
+            solution:          @str,   管理措施
+        }
+
+三方登录接口
+THIRDPARTY_USER_NODE:
+{
+        "openid":           @str, openid,
+        "user_id":          @str, 用户id,
+        "unionid":          @str,  微信unionid,
+        "regist_channel":   @str, 注册渠道
+        "tp_type":          @str,   weixin或者qq
+        "head_img":         @str,  三方登录的头像,
+        "nickname":         @str,
+}
+
+*****************************************************
+1. comment： 获取视频播放凭证
+exp: http://video.bukur.cn/video/get_video_play_auth?ali_video_id=0bde0e66b20c49049b075ac47d034e1e
+uri: /video/get_video_play_auth
+method: GET
+param: {
+      ali_video_id:              @str, 视频ali_video_id
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        "PlayAuth": @str, 视频播放凭证
+        # VideoMeta定义参照https://help.aliyun.com/document_detail/52839.html?spm=5176.doc52833.2.3.ZR5Hjr&/#VideoMeta
+        "VideoMeta": {
+            "Status": "Normal",
+            "Duration": 6,
+            "CoverURL": "http://aliyun.bukur.cn/snapshot/0bde0e66b20c49049b075ac47d034e1e00001.jpg",
+            "VideoId": "0bde0e66b20c49049b075ac47d034e1e",
+            "Title": "107a5484ac736b51cdcaebb088890378"
+        },
+        "RequestId": "854E422F-EE23-4F80-87B3-B72AFA08D92C"
+    }
+}
+
+
+2. comment： 获取视频地址（扫码签到也用这个接口）
+uri: /video/get_video_play_url
+method: GET
+param: {
+      ali_video_id:              @str, 视频ali_video_id
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        {
+    "error_no": 0,
+    "data": {
+        "VideoBase": {
+            "Status": @str,视频装填
+            "Title":  @str, 标题
+            "CreationTime": @str, 创建时间
+            "CoverURL": 视频图片,
+            "MediaType": "video",
+            "VideoId": @str, 阿里云对应的视频id,
+            "Duration":  @str， 时长，以秒为单位 如："6.0"，
+        },
+        "RequestId": "B380F0C5-99E9-4586-BA09-9455A3896E03",
+        "PlayInfoList": {
+            # 每个视频可能有不同的格式， mp4，m3u8等，都单独作为一个成员
+            # 参照播放信息 PlayInfo： https://help.aliyun.com/document_detail/52839.html?spm=5176.doc56124.2.5.KEhUgO&/#PlayInfo
+            "PlayInfo": [
+                {
+                    "Definition": "LD", @str, 视频流清晰度定义, 取值：FD(流畅)，LD(标清)，SD(高清)，HD(超清)，OD(原画)，2K(2K)，4K(4K)
+                    "Encrypt": 0,       @long, 视频流是否加密流，取值：0(否)，1(是)
+                    "Format": "m3u8",   @str, 	视频流格式，若媒体文件为视频则取值：mp4, m3u8，若是纯音频则取值：mp3
+                    "JobId": "8af832cf68cb4d86a1e07c5c31b51236", @str, 媒体流转码的作业ID，作为媒体流的唯一标识
+                    "Height": 1694,     @long, 视频流高度，单位px
+                    "Width": 960,       @long,
+                    "StreamType": "video",  @str, 视频流类型，若媒体流为视频则取值：video，若是纯音频则取值：audio
+                    "Fps": "25.0000",       @str, 视频流帧率，每秒多少帧
+                    "Duration": "6.0000",   @str, 时长以秒为单位
+                    "Bitrate": "949.3850",  @str, 视频流码率，单位Kbps
+                    "PlayURL": @str, 视频流的播放地址: "http://aliyun.bukur.cn/0bde0e66b20c49049b075ac47d034e1e/d7c67086dc74418785764b03e16d50f9-3c0ca901ba2186e45fd3e3365a22666f.m3u8",
+                    "Size": 765724 @str, 视频流大小，单位Byte
+                },
+                {
+                    "Definition": "LD",
+                    "Encrypt": 0,
+                    "Format": "mp4",
+                    "JobId": "00461d43efab49589c5771e9f224f52e",
+                    "Width": 960,
+                    "StreamType": "video",
+                    "Fps": "25.0000",
+                    "Duration": "6.0000",
+                    "Height": 1694,
+                    "Bitrate": "856.3520",
+                    "PlayURL": "http://aliyun.bukur.cn/0bde0e66b20c49049b075ac47d034e1e/d7c67086dc74418785764b03e16d50f9-5456d705cfd07e668f702e78be66cb6f.mp4",
+                    "Size": 695316
+                }
+            ]
+        }
+    },
+    }
+}
+
+
+2.comment： 获取视频上传凭证
+exp: http://video.bukur.cn/video/get_upload_auth?video_title=video2&video_file_name=2.mp4&video_size=100&video_description=11&video_cover_url=223
+uri: /video/get_upload_auth
+method: GET
+param: {
+      video_title:              @str, 视频标题, 为用户必填项
+      video_file_name:          @str, 视频文件， 如3.mp4, 5.wmv， 必须带上视频格式
+      video_size:               @int, 视频文件大小, 以byte为单位计算
+      video_description:        @str, 视频描述， 介绍视频内容, 可以选填
+      video_cover_url:          @str, 视频文件的展示图, (客户端无法获取到的情况下，我们会在视频上传失败的时候，)
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        UploadAddress:    @str, 上传地址
+        UploadAuth:       @str, 上传凭证
+        VideoId:          @str, 阿里云视频id
+        RequestId:        @str, 本次请求的RequestId，（客户端忽略)
+    }
+}
+
+
+
+3. comment: 获取视频列表
+uri: /video/get_video_list
+method: GET
+param: {
+      page:              @int, 页数，从0开始
+      page_size:         @int, 页面
+      channel:           @str, 视频频道
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        'total_num': @int, 总数
+        'video_list:[VIDEO_INFO]
+    }
+}
+
+
+4.comment： 保存视频信息 (现在不确定， 根据实际情况调整)
+uri: /video/save_video_info (这个接口，如果这些参数客户端获取不到， 那就只传ali_video_id, user_id, 我根据ali_video_id，
+    去获取上传之后的视频信息)
+method: POST
+param: {
+        ali_video_id       @str,  '对应的阿里云视频id'
+        user_id            @str,  '上传视频的用户id',
+        video_size         @str,  '视频大小',
+        video_file_name    @str,  '视频文件名，如123.mp4',
+        video_title        @str,  '视频标题',
+        video_cover_url    @str,  '视频大图',
+        video_description  @str,  '对应阿里云的视频播放信息',
+        video_time         @str,  '视频时长',
+        channel            @str,  '视频一级频道',
+        channel_level2     @str,  '视频二级频道',
+
+        # 2.0版本新增 >>>
+        view_role:         @str,   视频观看权限： public:公开，friend: 好友可见, self: 仅自己
+        plant_type：       @str,   作物类别
+        grow_peroid：      @str,   生长阶段
+        sickness：         @str,   病虫草害
+        solution:          @str,   管理措施
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        video_info: VIDEO_INFO @json, 视频信息
+    }
+}
+
+
+5. comment: 获取指定用户上传的视频列表
+uri: /video/get_special_user_video_list
+method: GET
+param: {
+      page:              @int, 页数，从0开始
+      page_size:         @int, 页面
+      user_id:           @str, 当前用户id
+      dest_user_id:      @str, 目标用户id
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+         'total_num': @int, 总数
+        'video_list:[VIDEO_INFO]
+    }
+}
+
+
+6. comment: 上传文件，返会上传之后的阿里云url
+uri: /video/main_search
+method: GET
+param: {
+      search_str: @str, 搜索内容， 前期按照视频标题来搜索
+      page:       @int, 页码
+      page_size   @str，页数大小
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        'total_num': @int, 总数
+        'video_list:[VIDEO_INFO]
+    }
+}
+
+
+7. comment: 上传文件，返会上传之后的阿里云url
+uri: /api/upload_file
+method: GET
+param: {
+      file: 文件内容
+
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        file_url:  @上传之后返回的文件url
+    }
+}
+
+
+8. comment: 上传文件，返会上传之后的阿里云url
+uri: /video/get_video_detail
+method: GET
+param: {
+      user_id： @str，当前用户id
+      video_id： @int，video id
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        video_info:VIDEO_INFO
+    }
+}
+
+
+
+9. comment: 上传文件，返会上传之后的阿里云url
+uri: /video/get_video_share_info
+method: GET
+param: {
+      video_id： @int，video id
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        share_info:
+        {
+            cover_img:           @str, 分享缩略图
+            video_title:         @str, 分享标题
+            video_description:   @str, 分享描述
+            share_url:           @str, 分享后的跳转地址
+        }
+    }
+}
+
+10. comment: 获取收藏列表
+uri: /video/get_collect_video_list
+method: GET
+param: {
+      page:              @int, 页数，从0开始
+      page_size:         @int, 页面
+      dest_user_id:      @str, 目标uid
+      user_id:          @str, 当前uid
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        'total_num': @int, 总数
+        'video_list:[VIDEO_INFO]
+    }
+}
+
+
+11. comment: 获取观看记录列表
+uri: /video/get_view_history
+method: GET
+param: {
+      page:              @int, 页数，从0开始
+      page_size:         @int, 页面
+      user_id:          @str, 当前uid
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        'total_num': @int, 总数
+        'video_list:[VIDEO_INFO]
+    }
+}
+------------------------------视频用户行为相关-----------------------------------
+COMMENT_INFO:
+{
+    "comment_id":   @int, 评论id
+    "content":      @str, 评论内容
+    "comment_time": @str, 评论时间
+    "author_head_img": @str,头像
+    "author_id":       @str， user_id
+    "author_name":  @str, 评论人姓名
+    "is_self":         @str, 1 是否是自己评价的
+    "is_self_like":    @str, 1 是否是自己点赞的
+}
+
+1. comment: 视频点赞
+uri: /video/like
+method: POST
+param: {
+    video_id: @str, 视频id
+    user_id:  @str, user_id
+    cancel:   @int, 0：点赞， 1：取消点赞
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+    }
+}
+
+
+2. comment:视频收藏
+uri: /video/collect
+method: POST
+param: {
+    video_id: @str, 视频id
+    user_id:  @str, user_id
+    cancel:   @int, 0：收藏， 1：取消收藏
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+    }
+}
+
+3. comment:获取视频评论列表
+uri: http://video.bukur.cn/video/get_comment_list
+method: GET
+param: {
+    id:       @str, 视频id
+    user_id:  @str, user_id
+}
+return:
+{
+    "error_no":
+    "data": {
+            COMMENT_INFO
+    }
+    "error_msg": "success"
+}
+
+
+4.comment: 发表评论
+http://video.bukur.cn/video/publish_comment
+method: POST
+param: {
+    obj_id:   @str, 视频id
+    user_id:  @str, user_id
+    content:  @str, 评论内容
+}
+return:
+{
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    "data": {
+        "total_comment_num": 2,
+        "comment_list": [
+            COMMENT_INFO,]
+    },
+}
+
+
+5.comment: 通知用户观看视频, 播放的时候调用一次，记录观看次数和用户观看过的视频
+http://video.bukur.cn/video/push_video_view
+method: POST
+param: {
+    video_id:   @str, 视频id
+    user_id:  @str, user_id
+}
+return:
+{
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+}
+
+6. comment: 评论点赞
+uri: /comment/comment_like
+method: POST
+param: {
+    comment_id: @str, 视频id
+    user_id:  @str, user_id
+    cancel:   @int, 0：点赞， 1：取消点赞
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+    }
+}
+
+7. 删除评论
+uri: /video/del_comment
+method: POST
+param: {
+    comment_id: @str, 视频id
+    user_id:  @str, user_id
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+    }
+}
+
+------------------------------用户相关接口--------------------------
+USER_INFO:
+{
+    phone:          @str, 手机号
+    user_id:        @str, 用户id
+    name            @str, 用户姓名
+    nick_name       @str, 用户昵称
+    head_img        @str, 用户头像
+    follow_num      @str, 关注的用户数
+    fans_num        @int, 粉丝数
+    is_self:        @int, 1自己，0不是自己
+}
+
+
+域名都是：user.bukur.cn
+1. comment: 发送短信验证码
+uri: /user/send_identify_code
+method: POST/GET
+param: {
+      "phone":      @str, 用户手机号
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+    }
+}
+# 备注
+error_no=0: 短信发送成功
+1. error_no=-1: 参数传输错误， 手机号没传
+2. error_no=-2: 参数传输错误， 手机号不合法
+3. error_no=-3: 参数传输错误， 短信发送失败
+
+
+
+
+2. comment: 手机号+验证码登录
+uri: /user/identify_code_login
+method: POST
+param: {
+      "phone":              @str, 用户手机号
+      "identify_code":      @str, 手机验证码
+}
+
+return: {
+    error_no:       @int, 0表示登录成功/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        "user_info": {
+            "user_id":      @str, 用户id
+            "name":         @str, 姓名
+            "nick_name":    @str, 昵称
+            "head_img":     @str, 头像url
+            "channel":      @str, 注册渠道
+        }
+    }
+}
+
+3.commit: 手机号+密码登录
+uri: /user/login
+method: POST
+param: {
+      "phone":              @str, 用户手机号
+      "passwd":             @str, 密码
+}
+
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        "user_info": {
+            "user_id":      @str, 用户id
+            "name":         @str, 姓名
+            "nick_name":    @str, 昵称
+            "head_img":     @str, 头像url
+            "channel":      @str, 注册渠道
+        }
+    }
+}
+
+
+
+4.commit: 修改登录密码
+uri: /user/change_password
+method: POST
+param: {
+      "phone":              @str, 用户手机号
+      "passwd":      @str, 手机验证码
+}
+
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+}
+
+
+
+5.commit: 用户注册
+uri: /user/register
+method: POST
+param: {
+      "phone":          @str, 用户手机号
+      "passwd":         @str, 手机验证码
+      "name":           @str, 姓名
+      "nick_name":      @str, 昵称
+      "sex":            @int, 0男， 1女
+      "identify_code":  @str, 短信验证码
+      "channel":        @str, 注册统计,IOS传'ios',Android传'android', H5传'h5'
+
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data: {
+         "user_info": {
+            "user_id":      @str, user id
+            "name":         @str, 姓名
+            "nick_name":    @str, 昵称
+            "phone":        @str, 手机号
+            "head_img":     @str, 头像
+            "sex":          @int, 0男， 1女
+            "channel":      @str，注册渠道
+        }
+    }
+}
+
+6. comment: 关注用户
+uri: /user/follow_user
+method: POST
+param: {
+      "dest_user_id": @str, 目标用户id
+      "user_id":      @str, 当前用户id
+      cancel:        @int, 1,取消关注， 0，关注
+}
+
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+}
+
+
+7. comment: 个人中心
+uri: /user/my_user_center
+method: GET
+param: {
+      "user_id":       @str, 当前用户id
+      "dest_user_id":  @str, 目标用户id
+}
+
+return: {
+    data:{
+        user_info: USER_INFO
+    }
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+}
+
+
+8. comment: 修改用户信息
+uri: /user/update_user_info
+method: POST
+param: {
+      "user_id":       @str, 当前用户id
+      "name"：         @str, 姓名
+      "nick_name"：    @str, 昵称
+      "phone"：        @str, 手机号
+      "head_img"：     @str, 头像
+      "introduce"：    @str, 简介
+      "sex"：          @int, 性别0男，1女
+}
+
+return: {
+    data:{
+        user_info: USER_INFO
+    }
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+}
+
+9. comment: 修改用户信息
+uri: /user/get_follow_list
+method: GET
+param: {
+       dest_user_id:  @目标用户id
+       page:          @int, 页数
+}
+return: {
+    data:{
+
+        total_num: int, 总数
+        user_list: [USER_INFO]
+    }
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+}
+
+
+
+
+
+----------------------------可能会用到的接口------------------------------------------
+100. comment: 获取阿里云对应的视频信息
+uri: /video/get_video_info
+method: GET
+param: {
+      user_id:           @str, 用户id
+      video:      @str, 目标用户id
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        "video_info": {
+                # Video定义参照:https://help.aliyun.com/document_detail/52839.html?spm=5176.doc52833.2.3.ZR5Hjr&/#Video
+                "Video": {
+                    "Status": "Normal",
+                    "Title": "107a5484ac736b51cdcaebb088890378",
+                    "CoverURL": "http://video.bukur.cn/snapshot/0bde0e66b20c49049b075ac47d034e1e00001.jpg",
+                    "CreationTime": "2017-12-02T09:35:09Z",
+                    "VideoId": "0bde0e66b20c49049b075ac47d034e1e",
+                    "Snapshots": {
+                        "Snapshot": [
+                            "http://video.bukur.cn/snapshot/0bde0e66b20c49049b075ac47d034e1e00001.jpg"
+                        ]
+                    },
+                    "ModifyTime": "2017-12-02 17:35:44",
+                    "Duration": 6,
+                    "CreateTime": "2017-12-02 17:35:09",
+                    "Size": 819310
+                },
+                "RequestId": "E652A138-D97A-48E1-94FF-DBD36401ACFA"
+            },
+        "video_id": "1"
+    }
+}
+
+
+
+
+
++++++++++++++++++++++++++++2.0版本新增接口++++++++++++++++++++++++++++++++++++++
+
+1. comment: 首页接口
+uri: /home_page
+method: GET
+param: {
+      user_id： @str，当前用户id
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data:{
+        video_info:VIDEO_INFO
+    }
+}
+
+
+2. comment: 第三方帐号登录
+uri: http://user.gengeng.mobi/thirdparty_login
+method: POST
+param: {
+    type:           @str, 第三方类型, 例如 weixin qq h5wx xiaochengxu
+    openid:         @str, 第三方账户id
+    head_img:       @str, 头像
+    nickname:       @str, 昵称
+    channel:        @str, app下载渠道
+    unionid:        @str, 微信登录时传的unionid
+    device_type:    @str, 设备类型
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data: {
+        // 同THIRDPARTY_USER_NODE
+    }
+}
+
+
+2. comment: 第三方帐号登录
+uri: http://user.gengeng.mobi/thirdparty_login
+method: POST
+param: {
+    type:           @str, 第三方类型, 例如 weixin qq h5wx xiaochengxu
+    openid:         @str, 第三方账户id
+    head_img:       @str, 头像
+    nickname:       @str, 昵称
+    channel:        @str, app下载渠道
+    unionid:        @str, 微信登录时传的unionid
+    device_type:    @str, 设备类型
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data: {
+        // 同THIRDPARTY_USER_NODE
+    }
+}
+
+
+HOME_SHARE_INFO:
+
+"share_info": {
+    "share_img_url": "https://gengeng-img.oss-cn-beijing.aliyuncs.com/share_img/2.jpg",
+    "user_id": "15aca266de79f7c43b439a180365aca3",
+    "name": "花果山",
+    "genggeng_id": ""
+}
+
+3. comment: 分享个人主页的接口
+uri: http://user.gengeng.mobi/ger_home_share_info
+method: GET
+method: GET
+param: {
+    user_id: 用户id
+}
+return: {
+    error_no:       @int, 0表示接口返回正常/非0表示请求错误
+    error_msg:      @str, error_no不为0时的错误提示信息
+    data: {
+        // 參照：HOME_SHARE_INFO
+    }
+}
